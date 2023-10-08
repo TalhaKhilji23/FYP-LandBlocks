@@ -23,8 +23,17 @@ const PropertySchema = new mongoose.Schema(
       min: 50,
     },
     img: {
+      // public_id : {
+      //   type : String,
+      //   required : true
+
+      // },
+      // url : {
+      //   type : String,
+      //   required : true
+
+      // }
       type: String,
-      required: true,
     },
     price: {
       type: Number,

@@ -1,7 +1,10 @@
 const verifyToken = require("../middlewares/verifyToken");
 const Property = require("../models/Property");
 const User = require("../models/User");
+const cloudinary = require('../utils/cloudinary')
 const propertyController = require("express").Router();
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 // get all properties
 propertyController.get("/getAll", async (req, res) => {
@@ -100,19 +103,69 @@ propertyController.get("/find/:id", async (req, res) => {
 });
 
 // create estate
-propertyController.post("/", verifyToken, async (req, res) => {
-  console.log("hello");
-  try {
-    const newProperty = await Property.create({
-      ...req.body,
-      currentOwner: req.user.id,
-    });
+propertyController.post(
+  "/",
+  verifyToken,
+  // upload.single("img"),
+  async (req, res) => {
+    const {
+      title,
+      type,
+      desc,
+      price,
+      sqmeters,
+      img,
+      city,
+      address,
+      baths,
+      rooms,
+      featured,
+    } = req.body;
+    console.log("backend image>>>>>>>>>>>>.",req.body.img)
 
-    return res.status(201).json(newProperty);
-  } catch (error) {
-    return res.status(500).json(error);
+    try {
+     
+      console.log("backend22222222222222222222")
+      const result = await cloudinary.uploader.upload(
+        req.body.img,
+        {
+          resource_type: "image",
+        },
+        async (error, result) => {
+          if (error) {
+            console.log("Cloudinary Error:", error);
+            return res.status(500).json(error);
+          }
+          console.log("backend333333333333333");
+
+          const cloudinaryUrl = result.secure_url;
+          console.log("cloudurlll", cloudinaryUrl);
+
+          const newProperty = await Property.create({
+            title,
+            type,
+            desc,
+            img: cloudinaryUrl,
+            price,
+            sqmeters,
+            city,
+            address,
+            baths,
+            rooms,
+            featured,
+            currentOwner: req.user.id,
+          });
+
+          return res.status(201).json(newProperty);
+        }
+      );
+    } catch (error) {
+      console.log("Error:", error);
+      return res.status(500).json(error);
+    }
   }
-});
+);
+
 
 // update estate
 propertyController.put("/:id", verifyToken, async (req, res) => {

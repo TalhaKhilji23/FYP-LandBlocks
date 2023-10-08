@@ -5,10 +5,12 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/images");
   },
+  
   filename: (req, file, cb) => {
     cb(null, req.body.filename);
   },
 });
+console.log("storageee::",storage)
 
 const upload = multer({
   storage: storage,

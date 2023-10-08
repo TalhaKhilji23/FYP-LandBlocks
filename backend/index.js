@@ -1,4 +1,5 @@
 const express = require("express");
+// const bodyParser = require('body-parser')
 const mongoose = require("mongoose");
 const dotenv = require("dotenv").config();
 const cors = require("cors");
@@ -10,7 +11,9 @@ const uploadController = require("./controllers/uploadController");
 // db connecting
 mongoose.set("strictQuery", false);
 mongoose.connect(process.env.MONGO_URL, () => console.log("Db is connected"));
-
+var bodyParser = require("body-parser");
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 // middlewares
 app.use(cors());
 app.use(express.json());
