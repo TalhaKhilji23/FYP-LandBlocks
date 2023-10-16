@@ -4,12 +4,12 @@ const User = require("../models/User");
 const cloudinary = require('../utils/cloudinary')
 const propertyController = require("express").Router();
 const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage() });
+// const upload = multer({ storage: multer.memoryStorage() });
 
 // get all properties
 propertyController.get("/getAll", async (req, res) => {
   try {
-    const properties = await Property.find({ featured: true }).populate(
+    const properties = await Property.find().populate(
       "currentOwner",
       "-password"
     );
@@ -167,25 +167,100 @@ propertyController.post(
 );
 
 
+
 // update estate
+// propertyController.put("/:id", verifyToken, async (req, res) => {
+//   try {
+//     console.log("Server11111")
+//     // const property = await Property.findById(req.params.id);
+//     // if (property.owner.toString() !== req.user.id.toString()) {
+//     //   throw new Error("You are not allowed to update other people properties");
+//     // }
+//     //     console.log("Server222", property);
+
+//     const updatedProperty = await Property.findByIdAndUpdate(
+//       req.params.id,
+//       { $set: req.body },
+//       { new: true }
+//     );
+//     console.log("Server222", updatedProperty);
+
+
+//     return res.status(200).json(updatedProperty);
+//   } catch (error) {
+//     return res.status(500).json(error);
+//   }
+// });
+
 propertyController.put("/:id", verifyToken, async (req, res) => {
+  console.log("backend image >>>>>>>>.", req.body.img);
   try {
     const property = await Property.findById(req.params.id);
-    if (property.owner.toString() !== req.user.id.toString()) {
-      throw new Error("You are not allowed to update other people properties");
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
     }
 
-    const updatedProperty = await Property.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true }
-    );
+    console.log("backend 22222222222222222222", property);
+
+    // Upload the new image to Cloudinary
+    if (req.body.img) {
+      const cloudinaryResponse = await cloudinary.uploader.upload(
+        req.body.img,
+        {
+          resource_type: "image",
+        }
+      );
+
+      const cloudinaryUrl = cloudinaryResponse.secure_url;
+      console.log("Cloudinary URL:", cloudinaryUrl);
+
+      property.img = cloudinaryUrl;
+    }
+
+    // Update other fields if present in the request
+    if (req.body.title) {
+      property.title = req.body.title;
+    }
+    if (req.body.type) {
+      property.type = req.body.type;
+    }
+    if (req.body.desc) {
+      property.desc = req.body.desc;
+    }
+    if (req.body.price) {
+      property.price = req.body.price;
+    }
+    if (req.body.sqmeters) {
+      property.sqmeters = req.body.sqmeters;
+    }
+    if (req.body.city) {
+      property.city = req.body.city;
+    }
+    if (req.body.address) {
+      property.address = req.body.address;
+    }
+    if (req.body.baths) {
+      property.baths = req.body.baths;
+    }
+    if (req.body.rooms) {
+      property.rooms = req.body.rooms;
+    }
+    if (req.body.featured) {
+      property.featured = true;
+    }
+
+    // Save the updated property
+    const updatedProperty = await property.save();
+    console.log("backend 333333333333333", updatedProperty);
 
     return res.status(200).json(updatedProperty);
   } catch (error) {
+    console.log("Error:", error);
     return res.status(500).json(error);
   }
 });
+
+
 
 // delete estate
 // propertyController.delete("/:id", async (req, res) => {
